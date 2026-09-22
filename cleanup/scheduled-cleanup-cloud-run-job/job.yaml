@@ -1,0 +1,54 @@
+# Cloud Run Job (run.googleapis.com/v1) executing the FinOps detectors.
+# Deploy:  gcloud run jobs replace job.yaml --region asia-south1
+# Trigger: Cloud Scheduler (see scheduler.yaml) via OAuth with the invoker SA.
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: finops-weekly-report
+  labels:
+    app.kubernetes.io/name: finops-weekly-report
+    app.kubernetes.io/part-of: cloud-cost-optimization
+    env: dev
+    team: platform
+    cost-center: cc-1001
+  annotations:
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: finops-weekly-report
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      parallelism: 1
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: finops-job-runner@example-project-dev.iam.gserviceaccount.com
+          timeoutSeconds: 1800
+          maxRetries: 1
+          containers:
+            - name: detectors
+              # Deploy pipeline substitutes the SHA tag; never `latest`.
+              image: asia-south1-docker.pkg.dev/example-project-dev/finops/detectors:0a1b2c3
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              env:
+                - name: GOOGLE_CLOUD_PROJECT
+                  value: example-project-dev
+                - name: FIXTURE_MODE
+                  value: "false"
+                - name: PROMETHEUS_URL
+                  value: http://prometheus.monitoring.svc.cluster.local:9090
+                - name: REPORT_BUCKET
+                  value: example-project-dev-finops-reports
+                - name: CLEANUP_EXECUTE
+                  value: "false"
+                - name: SLACK_WEBHOOK_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: finops-slack-webhook
+                      key: latest

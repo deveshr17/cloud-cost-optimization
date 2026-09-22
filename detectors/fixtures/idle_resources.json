@@ -1,0 +1,44 @@
+{
+  "_comment": "Synthetic inventory for example-project-dev. All names, IPs (RFC 5737) and IDs are placeholders.",
+  "project": "example-project-dev",
+  "as_of": "2026-09-21T02:00:00Z",
+  "disks": [
+    {"name": "pd-orphan-postgres-data", "zone": "asia-south1-a", "type": "pd-ssd", "size_gb": 500, "users": [], "labels": {"env": "dev", "team": "payments"}, "last_attach_timestamp": "2026-05-02T10:00:00Z", "creation_timestamp": "2025-11-01T10:00:00Z"},
+    {"name": "pd-ci-runner-scratch", "zone": "asia-south1-b", "type": "pd-balanced", "size_gb": 200, "users": [], "labels": {"env": "dev", "keep": "true"}, "last_attach_timestamp": "2026-08-30T10:00:00Z", "creation_timestamp": "2026-01-15T10:00:00Z"},
+    {"name": "pd-legacy-jenkins-home", "zone": "asia-south1-a", "type": "pd-standard", "size_gb": 1000, "users": [], "labels": {"env": "uat"}, "last_attach_timestamp": "2026-02-11T10:00:00Z", "creation_timestamp": "2024-06-01T10:00:00Z"},
+    {"name": "pd-api-gateway-boot", "zone": "asia-south1-a", "type": "pd-balanced", "size_gb": 50, "users": ["projects/example-project-dev/zones/asia-south1-a/instances/api-gateway-1"], "labels": {"env": "dev", "app": "api-gateway"}, "creation_timestamp": "2026-03-01T10:00:00Z"},
+    {"name": "pd-stopped-batch-boot", "zone": "asia-south1-c", "type": "pd-balanced", "size_gb": 100, "users": ["projects/example-project-dev/zones/asia-south1-c/instances/batch-worker-legacy"], "labels": {"env": "dev", "app": "batch"}, "creation_timestamp": "2025-09-01T10:00:00Z"}
+  ],
+  "addresses": [
+    {"name": "ip-old-lb-frontend", "region": "asia-south1", "address": "203.0.113.10", "status": "RESERVED", "address_type": "EXTERNAL", "users": [], "creation_timestamp": "2025-12-01T00:00:00Z", "labels": {"env": "uat"}},
+    {"name": "ip-vpn-peer", "region": "asia-south1", "address": "203.0.113.11", "status": "IN_USE", "address_type": "EXTERNAL", "users": ["projects/example-project-dev/regions/asia-south1/forwardingRules/vpn-fr"], "creation_timestamp": "2025-06-01T00:00:00Z", "labels": {"env": "prod"}},
+    {"name": "ip-nat-standby", "region": "asia-south1", "address": "198.51.100.7", "status": "RESERVED", "address_type": "EXTERNAL", "users": [], "creation_timestamp": "2026-09-15T00:00:00Z", "labels": {"env": "dev", "keep": "true"}}
+  ],
+  "instances": [
+    {"name": "api-gateway-1", "zone": "asia-south1-a", "machine_type": "e2-standard-4", "status": "RUNNING", "labels": {"env": "dev", "app": "api-gateway"}, "last_stop_timestamp": null, "disks": [{"name": "pd-api-gateway-boot", "size_gb": 50, "type": "pd-balanced"}]},
+    {"name": "batch-worker-legacy", "zone": "asia-south1-c", "machine_type": "e2-standard-8", "status": "TERMINATED", "labels": {"env": "dev", "app": "batch"}, "last_stop_timestamp": "2026-04-18T22:10:00Z", "disks": [{"name": "pd-stopped-batch-boot", "size_gb": 100, "type": "pd-balanced"}]},
+    {"name": "uat-bastion", "zone": "asia-south1-b", "machine_type": "e2-small", "status": "TERMINATED", "labels": {"env": "uat", "keep": "true"}, "last_stop_timestamp": "2026-09-10T22:10:00Z", "disks": [{"name": "pd-uat-bastion-boot", "size_gb": 20, "type": "pd-standard"}]}
+  ],
+  "snapshots": [
+    {"name": "snap-postgres-2025-10-01", "source_disk": "pd-orphan-postgres-data", "storage_bytes": 214748364800, "creation_timestamp": "2025-10-01T01:00:00Z", "labels": {"env": "dev"}},
+    {"name": "snap-postgres-2025-11-01", "source_disk": "pd-orphan-postgres-data", "storage_bytes": 225485783040, "creation_timestamp": "2025-11-01T01:00:00Z", "labels": {"env": "dev"}},
+    {"name": "snap-jenkins-2024-12-24", "source_disk": "pd-legacy-jenkins-home", "storage_bytes": 644245094400, "creation_timestamp": "2024-12-24T01:00:00Z", "labels": {"env": "uat"}},
+    {"name": "snap-api-gateway-weekly", "source_disk": "pd-api-gateway-boot", "storage_bytes": 12884901888, "creation_timestamp": "2026-09-14T01:00:00Z", "labels": {"env": "dev"}},
+    {"name": "snap-compliance-hold-2025", "source_disk": "pd-legacy-jenkins-home", "storage_bytes": 107374182400, "creation_timestamp": "2025-01-05T01:00:00Z", "labels": {"env": "uat", "keep": "true"}}
+  ],
+  "node_pools": [
+    {"cluster": "gke-dev-primary", "location": "asia-south1", "name": "default-pool", "node_count": 3, "machine_type": "e2-standard-4", "autoscaling": {"enabled": true, "min": 1, "max": 6}, "spot": false},
+    {"cluster": "gke-dev-primary", "location": "asia-south1", "name": "ml-experiments", "node_count": 2, "machine_type": "n2-standard-8", "autoscaling": {"enabled": false}, "spot": false, "running_pods_excluding_daemonsets": 0},
+    {"cluster": "gke-uat-primary", "location": "asia-south1", "name": "batch-spot", "node_count": 0, "machine_type": "e2-standard-8", "autoscaling": {"enabled": true, "min": 0, "max": 10}, "spot": true, "running_pods_excluding_daemonsets": 0}
+  ],
+  "forwarding_rules": [
+    {"name": "fr-checkout-https", "region": "global", "load_balancing_scheme": "EXTERNAL_MANAGED", "target": "targetHttpsProxies/checkout-proxy", "backend_service_healthy_backends": 4},
+    {"name": "fr-legacy-admin", "region": "asia-south1", "load_balancing_scheme": "EXTERNAL", "target": "targetPools/legacy-admin-pool", "backend_service_healthy_backends": 0, "backends_total": 0},
+    {"name": "fr-internal-grpc", "region": "asia-south1", "load_balancing_scheme": "INTERNAL", "target": "backendServices/grpc-be", "backend_service_healthy_backends": 2}
+  ],
+  "cloudsql_instances": [
+    {"name": "pg-orders-dev", "region": "asia-south1", "tier": "db-custom-2-7680", "state": "RUNNABLE", "storage_gb": 100, "connections_p95_14d": 12, "cpu_utilization_avg_14d": 0.11, "labels": {"env": "dev", "app": "orders"}},
+    {"name": "mysql-legacy-cms", "region": "asia-south1", "tier": "db-custom-4-15360", "state": "RUNNABLE", "storage_gb": 250, "connections_p95_14d": 0, "cpu_utilization_avg_14d": 0.004, "labels": {"env": "uat", "app": "cms"}},
+    {"name": "pg-analytics-replica", "region": "asia-south1", "tier": "db-custom-8-30720", "state": "RUNNABLE", "storage_gb": 500, "connections_p95_14d": 1, "cpu_utilization_avg_14d": 0.02, "labels": {"env": "uat", "app": "analytics", "keep": "true"}}
+  ]
+}

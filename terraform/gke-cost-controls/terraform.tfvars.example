@@ -1,0 +1,25 @@
+# Copy to terraform.tfvars (git-ignored) and replace placeholders.
+project_id         = "example-project-dev"
+billing_account_id = "012345-6789AB-CDEF01"
+org                = "example"
+env                = "dev"
+region             = "asia-south1"
+network            = "projects/example-project-dev/global/networks/example-dev-vpc"
+subnetwork         = "projects/example-project-dev/regions/asia-south1/subnetworks/example-dev-gke"
+
+general_machine_type = "e2-standard-4"
+general_min_nodes    = 1
+general_max_nodes    = 4
+spot_machine_type    = "e2-standard-8"
+spot_max_nodes       = 10
+
+monthly_budget_amount         = 5000
+budget_currency_code          = "USD"
+anomaly_daily_spend_threshold = 500
+alert_email                   = "finops@example.com"
+
+labels = {
+  team        = "platform"
+  cost-center = "cc-1001"
+  app         = "gke-platform"
+}

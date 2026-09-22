@@ -1,0 +1,11 @@
+{
+  "_comment": "Synthetic VPA status.recommendation.containerRecommendations exported via kubectl get vpa -A -o json and flattened.",
+  "as_of": "2026-09-21T02:00:00Z",
+  "recommendations": [
+    {"namespace": "payments", "workload": "checkout-api", "container": "app", "target_cpu_m": 260, "target_mem_mi": 720, "upper_cpu_m": 520, "upper_mem_mi": 900},
+    {"namespace": "payments", "workload": "ledger-worker", "container": "worker", "target_cpu_m": 950, "target_mem_mi": 1180, "upper_cpu_m": 1400, "upper_mem_mi": 1500},
+    {"namespace": "search", "workload": "indexer", "container": "indexer", "target_cpu_m": 800, "target_mem_mi": 3900, "upper_cpu_m": 2200, "upper_mem_mi": 4600},
+    {"namespace": "search", "workload": "query-api", "container": "app", "target_cpu_m": 280, "target_mem_mi": 560, "upper_cpu_m": 450, "upper_mem_mi": 640},
+    {"namespace": "web", "workload": "storefront", "container": "nginx", "target_cpu_m": 50, "target_mem_mi": 64, "upper_cpu_m": 150, "upper_mem_mi": 96}
+  ]
+}

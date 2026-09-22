@@ -1,0 +1,52 @@
+{
+  "_comment": "PLACEHOLDER unit prices in USD used only for illustrative estimates. Replace with values from the Cloud Billing Catalog API (services.skus.list) for your region and agreements.",
+  "currency": "USD",
+  "region": "asia-south1",
+  "compute": {
+    "pd_standard_gb_month": 0.048,
+    "pd_balanced_gb_month": 0.120,
+    "pd_ssd_gb_month": 0.204,
+    "snapshot_gb_month": 0.032,
+    "static_ip_idle_hour": 0.012,
+    "forwarding_rule_hour": 0.030,
+    "e2_vcpu_hour": 0.0242,
+    "e2_gb_hour": 0.0032,
+    "spot_discount_fraction": 0.65,
+    "cud_1y_discount_fraction": 0.37,
+    "cud_3y_discount_fraction": 0.55
+  },
+  "cloudsql": {
+    "db_custom_vcpu_hour": 0.0475,
+    "db_custom_gb_hour": 0.0080,
+    "storage_ssd_gb_month": 0.204
+  },
+  "gcs": {
+    "standard_gb_month": 0.023,
+    "nearline_gb_month": 0.013,
+    "coldline_gb_month": 0.006,
+    "archive_gb_month": 0.0025,
+    "nearline_retrieval_gb": 0.01,
+    "coldline_retrieval_gb": 0.02,
+    "archive_retrieval_gb": 0.05,
+    "class_a_ops_per_10k": 0.05,
+    "class_b_ops_per_10k": 0.004
+  },
+  "bigquery": {
+    "on_demand_per_tib": 6.25,
+    "active_storage_gb_month": 0.023,
+    "long_term_storage_gb_month": 0.016,
+    "slot_hour_standard_edition": 0.048,
+    "slot_hour_enterprise_edition": 0.072,
+    "slot_hour_enterprise_1y_commit": 0.058
+  },
+  "redis": {
+    "memorystore_basic_gb_hour_m2": 0.026,
+    "memorystore_standard_gb_hour_m2": 0.043,
+    "memorystore_standard_gb_hour_m4": 0.035,
+    "memorystore_standard_gb_hour_m5": 0.030
+  },
+  "kubernetes": {
+    "vcpu_hour": 0.0242,
+    "gb_hour": 0.0032
+  }
+}

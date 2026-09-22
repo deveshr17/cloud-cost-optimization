@@ -1,0 +1,32 @@
+{
+  "_comment": "Synthetic Redis INFO snapshots (daily) for a Memorystore instance, plus static config. used_memory in bytes.",
+  "instance": "redis-sessions-dev",
+  "provider": "memorystore",
+  "tier": "STANDARD_HA",
+  "region": "asia-south1",
+  "as_of": "2026-09-21T02:00:00Z",
+  "provisioned_memory_gb": 5,
+  "maxmemory_bytes": 4294967296,
+  "maxmemory_policy": "noeviction",
+  "redis_version": "7.2",
+  "connected_clients_p95": 420,
+  "ops_per_sec_p95": 18500,
+  "avg_key_size_bytes": 1850,
+  "ttl_coverage_ratio": 0.62,
+  "big_keys": [
+    {"key_pattern": "session:*", "count": 1850000, "avg_bytes": 1400, "ttl_set": true},
+    {"key_pattern": "cache:product:*", "count": 240000, "avg_bytes": 6200, "ttl_set": true},
+    {"key_pattern": "leaderboard:global", "count": 1, "avg_bytes": 380000000, "ttl_set": false},
+    {"key_pattern": "ratelimit:*", "count": 900000, "avg_bytes": 90, "ttl_set": false}
+  ],
+  "daily_samples": [
+    {"date": "2026-08-23", "used_memory": 2523136000, "keyspace_hits": 91000000, "keyspace_misses": 21000000, "evicted_keys": 0, "expired_keys": 3200000, "instantaneous_ops_per_sec_p95": 15200},
+    {"date": "2026-08-27", "used_memory": 2640000000, "keyspace_hits": 93000000, "keyspace_misses": 22500000, "evicted_keys": 0, "expired_keys": 3300000, "instantaneous_ops_per_sec_p95": 15600},
+    {"date": "2026-08-31", "used_memory": 2790000000, "keyspace_hits": 95000000, "keyspace_misses": 24000000, "evicted_keys": 0, "expired_keys": 3400000, "instantaneous_ops_per_sec_p95": 16100},
+    {"date": "2026-09-04", "used_memory": 2950000000, "keyspace_hits": 98000000, "keyspace_misses": 26000000, "evicted_keys": 0, "expired_keys": 3500000, "instantaneous_ops_per_sec_p95": 16800},
+    {"date": "2026-09-08", "used_memory": 3120000000, "keyspace_hits": 101000000, "keyspace_misses": 28500000, "evicted_keys": 0, "expired_keys": 3600000, "instantaneous_ops_per_sec_p95": 17200},
+    {"date": "2026-09-12", "used_memory": 3300000000, "keyspace_hits": 104000000, "keyspace_misses": 31000000, "evicted_keys": 0, "expired_keys": 3700000, "instantaneous_ops_per_sec_p95": 17900},
+    {"date": "2026-09-16", "used_memory": 3490000000, "keyspace_hits": 106000000, "keyspace_misses": 33500000, "evicted_keys": 0, "expired_keys": 3800000, "instantaneous_ops_per_sec_p95": 18200},
+    {"date": "2026-09-20", "used_memory": 3690000000, "keyspace_hits": 108000000, "keyspace_misses": 36000000, "evicted_keys": 0, "expired_keys": 3900000, "instantaneous_ops_per_sec_p95": 18500}
+  ]
+}

@@ -1,0 +1,65 @@
+# Helm values for kube-downscaler (https://codeberg.org/hjacobs/kube-downscaler)
+# used to scale non-production Deployments/StatefulSets to zero outside
+# working hours. Node pools then drain via cluster autoscaler
+# (see cleanup/gke-scale-down-nonprod.sh for the node-pool-level variant).
+#
+# Install:
+#   helm repo add kube-downscaler https://kube-downscaler.github.io/helm-chart
+#   helm upgrade --install kube-downscaler kube-downscaler/kube-downscaler \
+#     -n kube-downscaler --create-namespace -f kube-downscaler-values.yaml
+#
+# Opt a namespace out: kubectl annotate ns payments downscaler/exclude=true
+# Force uptime once:  kubectl annotate deploy api downscaler/force-uptime=true
+image:
+  repository: ghcr.io/caas-team/kubedownscaler
+  tag: "0.4.3"
+  pullPolicy: IfNotPresent
+
+arguments:
+  - --interval=60
+  - --include-resources=deployments,statefulsets,horizontalpodautoscalers
+  - --default-uptime=Mon-Fri 08:00-20:00 Asia/Kolkata
+  - --default-downtime=never
+  - --exclude-namespaces=kube-system,gke-managed-.*,monitoring,istio-system,argocd,kube-downscaler
+  - --exclude-deployments=kube-downscaler
+  - --downtime-replicas=0
+  - --upscale-period=never
+  - --grace-period=900
+  - --dry-run=false
+
+# Uptime override windows for release days or demos; the operator reads the
+# annotation on the namespace, so this is documentation for the runbook.
+# kubectl annotate ns uat downscaler/uptime="Mon-Sat 07:00-23:00 Asia/Kolkata" --overwrite
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  name: kube-downscaler
+  automountServiceAccountToken: true  # needs API access to patch replicas
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+podLabels:
+  app.kubernetes.io/name: kube-downscaler
+  app.kubernetes.io/component: scheduler
+  finops.example.com/purpose: nonprod-downscale
+
+nodeSelector:
+  cloud.google.com/gke-spot: "false"

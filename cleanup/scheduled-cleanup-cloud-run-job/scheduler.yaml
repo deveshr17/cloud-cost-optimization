@@ -1,0 +1,17 @@
+# Cloud Scheduler job definition (gcloud scheduler jobs create http equivalent),
+# kept as data for `gcloud scheduler jobs update http --from-file` style tooling
+# and for review. Weekly Monday 07:00 IST.
+name: projects/example-project-dev/locations/asia-south1/jobs/finops-weekly-report
+description: Trigger the finops-weekly-report Cloud Run Job
+schedule: "0 7 * * 1"
+timeZone: Asia/Kolkata
+attemptDeadline: 180s
+retryConfig:
+  retryCount: 2
+  minBackoffDuration: 30s
+httpTarget:
+  uri: https://asia-south1-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/example-project-dev/jobs/finops-weekly-report:run
+  httpMethod: POST
+  oauthToken:
+    serviceAccountEmail: finops-scheduler-invoker@example-project-dev.iam.gserviceaccount.com
+    scope: https://www.googleapis.com/auth/cloud-platform

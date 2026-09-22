@@ -1,0 +1,114 @@
+name: scheduled-report
+
+# Weekly FinOps report. Authenticates to GCP with Workload Identity Federation
+# (no JSON keys), runs the detectors in live mode where credentials allow,
+# falls back to fixtures otherwise, and opens/updates a GitHub issue.
+
+on:
+  schedule:
+    - cron: "30 1 * * 1"   # Monday 07:00 IST
+  workflow_dispatch:
+    inputs:
+      fixture_mode:
+        description: Run against bundled fixtures instead of live GCP
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scheduled-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      issues: write
+    env:
+      FIXTURE_MODE: ${{ github.event_name == 'schedule' && 'false' || inputs.fixture_mode }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Authenticate to Google Cloud (OIDC)
+        if: env.FIXTURE_MODE != 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_FINOPS_SERVICE_ACCOUNT }}
+
+      - name: Install runtime dependencies
+        if: env.FIXTURE_MODE != 'true'
+        run: pip install -r requirements.txt
+
+      - name: Run detectors (live)
+        if: env.FIXTURE_MODE != 'true'
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          mkdir -p out
+          python -m detectors.idle_resources --project "$GOOGLE_CLOUD_PROJECT" --md-out out/idle-resources.md --json-out out/idle-resources.json
+          python -m detectors.bigquery_optimizer --project "$GOOGLE_CLOUD_PROJECT" --md-out out/bigquery.md
+          python -m detectors.storage_optimizer --project "$GOOGLE_CLOUD_PROJECT" --md-out out/storage.md
+
+      - name: Run detectors (fixtures)
+        if: env.FIXTURE_MODE == 'true'
+        run: |
+          mkdir -p out
+          python -m detectors.idle_resources --from-json detectors/fixtures/idle_resources.json --md-out out/idle-resources.md --json-out out/idle-resources.json
+          python -m detectors.k8s_rightsizing --from-json detectors/fixtures/prometheus_usage.json --vpa-json detectors/fixtures/vpa_recommendations.json --md-out out/rightsizing.md
+          python -m detectors.bigquery_optimizer --from-json detectors/fixtures/bigquery_jobs.json --md-out out/bigquery.md
+          python -m detectors.storage_optimizer --from-json detectors/fixtures/gcs_buckets.json --md-out out/storage.md
+          python -m detectors.redis_capacity --from-json detectors/fixtures/redis_info.json --md-out out/redis.md
+
+      - name: Assemble issue body
+        run: |
+          {
+            echo "Automated FinOps report - $(date -u +%Y-%m-%d) (fixture_mode=${FIXTURE_MODE})"
+            echo
+            for f in out/idle-resources.md out/rightsizing.md out/bigquery.md out/storage.md out/redis.md; do
+              [ -f "$f" ] || continue
+              echo "<details><summary>$(head -1 "$f" | sed 's/^# //')</summary>"
+              echo
+              cat "$f"
+              echo
+              echo "</details>"
+              echo
+            done
+          } > out/issue-body.md
+          # GitHub issue bodies are capped at 65536 characters.
+          head -c 60000 out/issue-body.md > out/issue-body.trimmed.md
+
+      - name: Open or update the weekly issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('out/issue-body.trimmed.md', 'utf8');
+            const title = `FinOps weekly report - ${new Date().toISOString().slice(0, 10)}`;
+            const label = 'finops-report';
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({ ...context.repo, per_page: 100 });
+            if (!labels.some(l => l.name === label)) {
+              await github.rest.issues.createLabel({ ...context.repo, name: label, color: '0e8a16', description: 'Automated cost report' });
+            }
+            const { data: open } = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: label, per_page: 20 });
+            for (const issue of open) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: issue.number, body: `Superseded by this week's report: ${title}` });
+              await github.rest.issues.update({ ...context.repo, issue_number: issue.number, state: 'closed' });
+            }
+            await github.rest.issues.create({ ...context.repo, title, body, labels: [label] });
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: finops-report-${{ github.run_id }}
+          path: out/
+          retention-days: 30

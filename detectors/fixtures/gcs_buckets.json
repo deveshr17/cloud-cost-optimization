@@ -1,0 +1,33 @@
+{
+  "_comment": "Synthetic GCS inventory. Age buckets come from a Storage Insights inventory report or `gsutil ls -L` aggregation; bytes per age band are cumulative for the bucket.",
+  "project": "example-project-dev",
+  "as_of": "2026-09-21T02:00:00Z",
+  "buckets": [
+    {"name": "example-project-dev-app-logs", "location": "asia-south1", "storage_class": "STANDARD", "versioning": false, "lifecycle_rules": [],
+     "labels": {"env": "dev", "team": "platform"},
+     "access_pattern": {"class_a_ops_30d": 1200000, "class_b_ops_30d": 400000, "egress_gb_30d": 15, "last_read_age_days_p50": 3},
+     "age_distribution_bytes": {"0-30": 1200000000000, "30-90": 2600000000000, "90-365": 7100000000000, "365+": 9800000000000},
+     "noncurrent_bytes": 0},
+    {"name": "example-project-dev-ml-datasets", "location": "asia-south1", "storage_class": "STANDARD", "versioning": true, "lifecycle_rules": [],
+     "labels": {"env": "dev", "team": "ml"},
+     "access_pattern": {"class_a_ops_30d": 8000, "class_b_ops_30d": 2400000, "egress_gb_30d": 900, "last_read_age_days_p50": 12},
+     "age_distribution_bytes": {"0-30": 3000000000000, "30-90": 5000000000000, "90-365": 4000000000000, "365+": 1000000000000},
+     "noncurrent_bytes": 6200000000000},
+    {"name": "example-project-dev-db-backups", "location": "asia-south1", "storage_class": "NEARLINE", "versioning": false,
+     "lifecycle_rules": [{"action": "SetStorageClass", "storage_class": "COLDLINE", "condition": {"age": 90}}],
+     "labels": {"env": "prod", "team": "payments", "cost-center": "cc-1001"},
+     "access_pattern": {"class_a_ops_30d": 900, "class_b_ops_30d": 40, "egress_gb_30d": 0, "last_read_age_days_p50": 400},
+     "age_distribution_bytes": {"0-30": 800000000000, "30-90": 1600000000000, "90-365": 6000000000000, "365+": 14000000000000},
+     "noncurrent_bytes": 0},
+    {"name": "example-project-dev-static-assets", "location": "asia-south1", "storage_class": "STANDARD", "versioning": false, "lifecycle_rules": [],
+     "labels": {"env": "prod", "team": "web"},
+     "access_pattern": {"class_a_ops_30d": 20000, "class_b_ops_30d": 95000000, "egress_gb_30d": 4200, "last_read_age_days_p50": 1},
+     "age_distribution_bytes": {"0-30": 40000000000, "30-90": 60000000000, "90-365": 150000000000, "365+": 250000000000},
+     "noncurrent_bytes": 0},
+    {"name": "example-project-dev-tmp-exports", "location": "asia-south1", "storage_class": "STANDARD", "versioning": true, "lifecycle_rules": [],
+     "labels": {"env": "dev"},
+     "access_pattern": {"class_a_ops_30d": 300000, "class_b_ops_30d": 5000, "egress_gb_30d": 2, "last_read_age_days_p50": 200},
+     "age_distribution_bytes": {"0-30": 200000000000, "30-90": 500000000000, "90-365": 1800000000000, "365+": 900000000000},
+     "noncurrent_bytes": 2400000000000}
+  ]
+}

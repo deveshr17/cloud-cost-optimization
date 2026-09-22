@@ -1,0 +1,142 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python tests and offline detectors
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dev dependencies (stdlib is enough for detectors; pyyaml for tests)
+        run: pip install pyyaml ruff
+
+      - name: Lint
+        run: ruff check detectors cleanup --select E,F,W --line-length 200
+
+      - name: Unit tests
+        run: python -m unittest discover -s detectors/tests -t . -v
+
+      - name: Regenerate reports from fixtures
+        run: make report
+
+      - name: Fail if committed reports drift from fixtures
+        run: |
+          if ! git diff --exit-code -- reports/; then
+            echo "::error::reports/ is out of date. Run 'make report' and commit the result."
+            exit 1
+          fi
+
+      - name: Cloud Run job smoke test (fixture mode)
+        env:
+          FIXTURE_MODE: "true"
+          OUT_DIR: out/job
+          PYTHONPATH: .
+        run: python cleanup/scheduled-cleanup-cloud-run-job/main.py
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: detector-output
+          path: out/
+          retention-days: 7
+
+  static:
+    name: Bash, YAML, JSON and SQL checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: bash -n
+        run: |
+          for f in $(git ls-files '*.sh'); do bash -n "$f"; done
+
+      - name: YAML and JSON parse
+        run: |
+          pip install pyyaml
+          make yaml-check
+
+      - name: sqlfluff (BigQuery dialect)
+        continue-on-error: true
+        run: |
+          pip install sqlfluff
+          sqlfluff lint billing/queries --dialect bigquery
+
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+
+      - name: fmt
+        run: terraform -chdir=terraform/gke-cost-controls fmt -check -recursive
+
+      - name: init (no backend) and validate
+        run: |
+          terraform -chdir=terraform/gke-cost-controls init -backend=false -input=false
+          terraform -chdir=terraform/gke-cost-controls validate
+
+  container:
+    name: Build detector image and scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build (not pushed)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: cleanup/scheduled-cleanup-cloud-run-job/Dockerfile
+          push: false
+          load: true
+          tags: finops-detectors:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: finops-detectors:${{ github.sha }}
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif

@@ -1,0 +1,99 @@
+# VerticalPodAutoscaler objects in recommendation-only mode (updateMode: "Off").
+# The VPA recommender observes usage and writes targets to .status without
+# evicting pods. detectors/k8s_rightsizing.py --vpa-json compares these
+# targets to its own p95/p99-derived numbers.
+#
+# Export flattened recommendations for the detector:
+#   kubectl get vpa -A -o json | jq '{recommendations: [.items[] |
+#     .metadata.namespace as $ns | .spec.targetRef.name as $wl |
+#     .status.recommendation.containerRecommendations[]? |
+#     {namespace: $ns, workload: $wl, container: .containerName,
+#      target_cpu_m: (.target.cpu | sub("m$";"") | tonumber),
+#      target_mem_mi: ((.target.memory | sub("Mi$";"") | tonumber))}]}'
+#
+# Requires the VPA components (GKE: `--enable-vertical-pod-autoscaling`).
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: checkout-api
+  namespace: payments
+  labels:
+    app.kubernetes.io/name: checkout-api
+    app.kubernetes.io/part-of: payments
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: checkout-api
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: app
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsOnly
+        minAllowed:
+          cpu: 50m
+          memory: 128Mi
+        maxAllowed:
+          cpu: "4"
+          memory: 8Gi
+      - containerName: istio-proxy
+        mode: "Off"
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: ledger-worker
+  namespace: payments
+  labels:
+    app.kubernetes.io/name: ledger-worker
+    app.kubernetes.io/part-of: payments
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ledger-worker
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: worker
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsOnly
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: "8"
+          memory: 16Gi
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: indexer
+  namespace: search
+  labels:
+    app.kubernetes.io/name: indexer
+    app.kubernetes.io/part-of: search
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: indexer
+  updatePolicy:
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: "*"
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsOnly
+        minAllowed:
+          cpu: 100m
+          memory: 512Mi
+        maxAllowed:
+          cpu: "8"
+          memory: 32Gi

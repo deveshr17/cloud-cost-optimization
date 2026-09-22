@@ -1,0 +1,22 @@
+{
+  "_comment": "Synthetic 30-day extract shaped like region-asia-south1.INFORMATION_SCHEMA.JOBS_BY_PROJECT plus TABLE_STORAGE / TABLE_OPTIONS. Bytes are totals over the window.",
+  "project": "example-project-dev",
+  "region": "asia-south1",
+  "window_days": 30,
+  "as_of": "2026-09-21T02:00:00Z",
+  "jobs": [
+    {"query_hash": "q-7f3a", "user_email": "svc-dashboards@example-project-dev.iam.gserviceaccount.com", "label_team": "analytics", "run_count": 2880, "total_bytes_billed": 302000000000000, "total_slot_ms": 9100000000, "avg_duration_s": 21, "referenced_tables": ["events.raw_events"], "sample_sql": "SELECT * FROM `example-project-dev.events.raw_events` WHERE DATE(event_ts) >= CURRENT_DATE() - 1"},
+    {"query_hash": "q-1c9e", "user_email": "svc-etl@example-project-dev.iam.gserviceaccount.com", "label_team": "data", "run_count": 30, "total_bytes_billed": 96000000000000, "total_slot_ms": 4200000000, "avg_duration_s": 610, "referenced_tables": ["events.raw_events", "dim.users"], "sample_sql": "MERGE `example-project-dev.marts.user_daily` t USING (...) s ON t.user_id = s.user_id ..."},
+    {"query_hash": "q-55b2", "user_email": "analyst@example.com", "label_team": "growth", "run_count": 410, "total_bytes_billed": 41000000000000, "total_slot_ms": 620000000, "avg_duration_s": 34, "referenced_tables": ["marts.user_daily"], "sample_sql": "SELECT user_id, SUM(orders) FROM `example-project-dev.marts.user_daily` GROUP BY 1"},
+    {"query_hash": "q-9de0", "user_email": "svc-finops@example-project-dev.iam.gserviceaccount.com", "label_team": "platform", "run_count": 30, "total_bytes_billed": 1800000000000, "total_slot_ms": 40000000, "avg_duration_s": 8, "referenced_tables": ["billing_export.gcp_billing_export_resource_v1_012345_6789AB_CDEF01"], "sample_sql": "SELECT service.description, SUM(cost) FROM billing_export.gcp_billing_export_resource_v1_012345_6789AB_CDEF01 WHERE usage_start_time >= ... GROUP BY 1"},
+    {"query_hash": "q-ab77", "user_email": "svc-ml@example-project-dev.iam.gserviceaccount.com", "label_team": "ml", "run_count": 12, "total_bytes_billed": 28000000000000, "total_slot_ms": 3100000000, "avg_duration_s": 1400, "referenced_tables": ["events.raw_events", "ml.features_wide"], "sample_sql": "CREATE OR REPLACE TABLE ml.features_wide AS SELECT ... FROM events.raw_events e JOIN ..."}
+  ],
+  "tables": [
+    {"table": "events.raw_events", "total_logical_bytes": 48000000000000, "active_logical_bytes": 9000000000000, "long_term_logical_bytes": 39000000000000, "partitioning": null, "clustering": [], "partition_expiration_days": null, "last_modified_days_ago": 0, "typical_filter_columns": ["event_ts", "tenant_id"]},
+    {"table": "marts.user_daily", "total_logical_bytes": 2100000000000, "active_logical_bytes": 2100000000000, "long_term_logical_bytes": 0, "partitioning": "DAY(day)", "clustering": ["user_id"], "partition_expiration_days": null, "last_modified_days_ago": 0, "typical_filter_columns": ["day"]},
+    {"table": "dim.users", "total_logical_bytes": 12000000000, "active_logical_bytes": 12000000000, "long_term_logical_bytes": 0, "partitioning": null, "clustering": [], "partition_expiration_days": null, "last_modified_days_ago": 1, "typical_filter_columns": ["user_id"]},
+    {"table": "ml.features_wide", "total_logical_bytes": 15000000000000, "active_logical_bytes": 15000000000000, "long_term_logical_bytes": 0, "partitioning": null, "clustering": [], "partition_expiration_days": null, "last_modified_days_ago": 2, "typical_filter_columns": ["snapshot_date"]},
+    {"table": "staging.legacy_imports_2023", "total_logical_bytes": 6500000000000, "active_logical_bytes": 6500000000000, "long_term_logical_bytes": 0, "partitioning": "DAY(load_date)", "clustering": [], "partition_expiration_days": null, "last_modified_days_ago": 88, "typical_filter_columns": ["load_date"]},
+    {"table": "logs.app_logs", "total_logical_bytes": 22000000000000, "active_logical_bytes": 4000000000000, "long_term_logical_bytes": 18000000000000, "partitioning": "DAY(timestamp)", "clustering": ["severity", "service"], "partition_expiration_days": null, "last_modified_days_ago": 0, "typical_filter_columns": ["timestamp", "service"]}
+  ]
+}
