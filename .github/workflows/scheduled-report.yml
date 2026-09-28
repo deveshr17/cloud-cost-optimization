@@ -5,8 +5,8 @@ name: scheduled-report
 # falls back to fixtures otherwise, and opens/updates a GitHub issue.
 
 on:
-  schedule:
-    - cron: "30 1 * * 1"   # Monday 07:00 IST
+  # schedule:
+  #   - cron: "30 1 * * 1"   # Monday 07:00 IST
   workflow_dispatch:
     inputs:
       fixture_mode:
